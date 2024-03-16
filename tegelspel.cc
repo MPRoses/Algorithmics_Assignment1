@@ -2,8 +2,9 @@
 
 #include "tegelspel.h"
 #include "standaard.h"
-#include <iomanip>  // voor leuker afdrukken
-#include <fstream>   // voor inlezen van spel
+#include <iomanip>  // setw
+#include <fstream>   // file lezen
+#include <algorithm> // count
 #include <iostream>
 
 //*************************************************************************
@@ -16,44 +17,57 @@ TegelSpel::TegelSpel ()
 
 //*************************************************************************
 
-int TegelSpel::getSchalen ()
-{
-  // TODO: implementeer deze memberfunctie
-  return 0;
-
+int TegelSpel::getSchalen () {
+  return aantalSchalen;
 }  // getSchalen
 
 //*************************************************************************
 
 string TegelSpel::getPot () { 
-
   return huidigePot;
-
-  // TODO: implementeer deze memberfunctie
-
 }  // getPot
 
 //*************************************************************************
+std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
+  std::vector<std::pair<int, int>> inhoudSchalen(aantalSchalen);
 
-vector< pair <int,int> > TegelSpel::getInhoudSchalen ()
-{ vector< pair <int,int> > inhoudSchalen;
-
-  // TODO: implementeer deze memberfunctie
+  for (int i = 0; i < aantalSchalen; i++) {
+    int aantalG = 0;
+    int aantalB = 0;
+    for (char c : schalen[i]) {
+      if (c == 'g') {
+        aantalG++;
+      } else if (c == 'b') {
+        aantalB++;
+      }
+    }
+    inhoudSchalen[i] = std::make_pair(aantalG, aantalB);
+  }
 
   return inhoudSchalen;
-
-}  // getInhoudSchalen
+}
 
 //*************************************************************************
 
-vector< pair <int,int> > TegelSpel::getInhoudRijen (int speler)
-{ vector< pair <int,int> > inhoudRijen;
+std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen (int speler) {
+  std::vector<std::pair<int, int>> inhoud(aantalRijenOpBord); 
+  std::vector<std::vector<int>>* spelerRijen;
 
-  // TODO: implementeer deze memberfunctie
+  if (speler == 0) {
+    spelerRijen = &speler1;
+  } else if (speler == 1) {
+    spelerRijen = &speler2;
+  }
 
-  return inhoudRijen;
+  for (int i = 0; i < aantalRijenOpBord; i++) {
+    int aantalG = (*spelerRijen)[i][0];
+    int aantalB = (*spelerRijen)[i][0];
 
-}  // getInhoudRijen
+    inhoud[i] = std::make_pair(aantalG, aantalB);
+  }
+
+  return inhoud;
+}
 
 //*************************************************************************
 
@@ -66,9 +80,21 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
     return false;
   } 
 
-  std::string regel;
+  if (!leesPot(fin)) return false;
+  if (!leesSchalenTegels(fin)) return false;
+  if (!leesRijenVakjes(fin)) return false;
+  if (!leesSpelers(fin)) return false;
+  if (!leesBeurt(fin)) return false;
+  bepaalTegels();
 
-  // case 1 : inhoud van de pot
+  std::cout << "Spel succesvol ingelezen! \n";
+
+  fin.close();
+  return true;
+}
+
+bool TegelSpel::leesPot(std::ifstream& fin) {
+  std::string regel;
   if (std::getline(fin, regel)) {
     for (char c : regel) {
       if (c != 'g' && c != 'b') {
@@ -78,20 +104,26 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
     }
     huidigePot = regel;
   }
+  return true;
+}
 
-  // case 2 : aantalSchalen en maximumAantalTegels
+bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
   if (!(fin >> aantalSchalen >> maximumAantalTegels)) {
     std::cout << "Fout bij inlezen aantalSchalen en maximumAantalTegels \n";
     return false;
   }
+  return true;
+}
 
-  // case 3 : aantalRijenOpBord en aantalVakjesPerRij
+bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
   if (!(fin >> aantalRijenOpBord >> aantalVakjesPerRij)) {
     std::cout << "Fout bij inlezen aantalRijenOpBord en aantalVakjesPerRij \n";
     return false;
   }
+  return true;
+}
 
-  // case 4 : speler1 en speler2
+bool TegelSpel::leesSpelers(std::ifstream& fin) {
   speler1.resize(aantalRijenOpBord, std::vector<int>(2));
   speler2.resize(aantalRijenOpBord, std::vector<int>(2));
 
@@ -107,14 +139,18 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
       return false;
     }
   }
+  return true;
+}
 
-  // case 5 : huidigeBeurt
+bool TegelSpel::leesBeurt(std::ifstream& fin) {
   if (!(fin >> huidigeBeurt) || (huidigeBeurt != 0 && huidigeBeurt != 1)) {
     std::cout << "Fout bij inlezen van de huidige beurt \n";
     return false;
   } 
+  return true;
+}
 
-  // bepaling van tegels t.o.v. schalen
+void TegelSpel::bepaalTegels() {
   schalen.resize(aantalSchalen, std::vector<char>(maximumAantalTegels));
 
   size_t pos = 0;
@@ -128,11 +164,6 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
       }
     }
   }
-
-  std::cout << "Spel succesvol ingelezen! \n";
-
-  fin.close();
-  return true;
 }
 
 //*************************************************************************

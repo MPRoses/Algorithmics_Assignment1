@@ -8,47 +8,16 @@
 #include "constantes.h"
 using namespace std;
 
-class TegelSpel
-{ public:
-    // Default constructor.
+class TegelSpel { 
+  public:
+    //default constructor
     TegelSpel ();
-
-    // Getter voor schalen
-    // Retourneer:
-    // * het aantal schalen van het huidige spel
+    // Retourneerd het aantal schalen van het huidige spel
     int getSchalen ();
-
-    // Getter voor pot
-    // Retourneer:
-    // * de inhoud van de pot (de resterende string)
+    // Retourneerd de inhoud van de pot
     string getPot ();
-    // fyi, dit ( ^) leek me super onlogisch, waarom staan er functies 
-    // naar iets wat een enkele string moet returnen, terwijl je dit
-    // gewoon in je class kan opslaan, daar is een class toch voor?
 
-    string huidigePot = "";
-    int aantalSchalen;
-    int maximumAantalTegels;
-    int aantalRijenOpBord;
-    int aantalVakjesPerRij;
-    int huidigeBeurt;
-
-    // speler1, speler2 en schalen zijn vectors
-    // zodat er dan gedeclareerd kan worden met een 
-    // niet constante waarde
-    // e.g. bij speler1 en speler2 zou bij de eerste waarde
-    // hier een max gesteld moet worden, ma ja, max is onhandig voor verdere aanpassingen en "simpel" terwijl het gewoon als vector kan
-
-    std::vector<std::vector<char>> schalen;
-    std::vector<std::vector<int>> speler1;
-    std::vector<std::vector<int>> speler2;
-
-
-    // Getter voor inhoud schalen
-    // Retourneer:
-    // * een vector met achtereenvolgens voor schaal 0, schaal 1, enzovoort,
-    //   een tweetal (aantalG,aantalB): het aantal gele, respectievelijk
-    //   blauwe tegels in die schaal
+    // Retourneerd vector,[schaal][Paar[aantalG, anatalB]]
     vector< pair <int,int> > getInhoudSchalen ();
 
     // Getter voor inhoud rijen van een speler
@@ -191,6 +160,28 @@ class TegelSpel
 
   private:
     // TODO: uw eigen private memberfuncties en -variabelen
+    bool leesPot(std::ifstream& fin);
+    bool leesSchalenTegels(std::ifstream& fin);
+    bool leesRijenVakjes(std::ifstream& fin);
+    bool leesSpelers(std::ifstream& fin);
+    bool leesBeurt(std::ifstream& fin);
+    void bepaalTegels();
+
+    string huidigePot = "";
+    int aantalSchalen;
+    int maximumAantalTegels;
+    int aantalRijenOpBord;
+    int aantalVakjesPerRij;
+    int huidigeBeurt;
+
+    // speler1, speler2 en schalen zijn vectors i.p.v. arrays
+    // zodat er dan gedeclareerd kan worden met een 
+    // niet constante waarde; ofwel met maximumAantalTegels, aantalSchalen en aantalRijenOpBord
+
+    std::vector<std::vector<char>> schalen;
+    std::vector<std::vector<int>> speler1;
+    std::vector<std::vector<int>> speler2;
+
 
 };
 
