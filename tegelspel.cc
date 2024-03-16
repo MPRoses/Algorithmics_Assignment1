@@ -19,15 +19,12 @@ TegelSpel::TegelSpel ()
 
 int TegelSpel::getSchalen () {
   return aantalSchalen;
-}  // getSchalen
-
-//*************************************************************************
+}
 
 string TegelSpel::getPot () { 
   return huidigePot;
-}  // getPot
+}
 
-//*************************************************************************
 std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
   std::vector<std::pair<int, int>> inhoudSchalen(aantalSchalen);
 
@@ -46,8 +43,6 @@ std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
 
   return inhoudSchalen;
 }
-
-//*************************************************************************
 
 std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen (int speler) {
   std::vector<std::pair<int, int>> inhoud(aantalRijenOpBord); 
@@ -69,30 +64,6 @@ std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen (int speler) {
   return inhoud;
 }
 
-//*************************************************************************
-
-bool TegelSpel::leesInSpel (const char* invoernaam) {
-  std::ifstream fin;   
-  fin.open(invoernaam); 
-
-  if (!fin) {  
-    std::cout << "Ongeldige bestandsnaam";
-    return false;
-  } 
-
-  if (!leesPot(fin)) return false;
-  if (!leesSchalenTegels(fin)) return false;
-  if (!leesRijenVakjes(fin)) return false;
-  if (!leesSpelers(fin)) return false;
-  if (!leesBeurt(fin)) return false;
-  bepaalTegels();
-
-  std::cout << "Spel succesvol ingelezen! \n";
-
-  fin.close();
-  return true;
-}
-
 bool TegelSpel::leesPot(std::ifstream& fin) {
   std::string regel;
   if (std::getline(fin, regel)) {
@@ -112,6 +83,12 @@ bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
     std::cout << "Fout bij inlezen aantalSchalen en maximumAantalTegels \n";
     return false;
   }
+
+  if (!integerInBereik(aantalSchalen, 1, 5) || !integerInBereik(maximumAantalTegels, 1, 5)) {
+    std::cout << "Waarden buiten toegestane bereik \n";
+    return false;
+  }
+
   return true;
 }
 
@@ -120,6 +97,12 @@ bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
     std::cout << "Fout bij inlezen aantalRijenOpBord en aantalVakjesPerRij \n";
     return false;
   }
+
+  if (!integerInBereik(aantalRijenOpBord, 1, 10) || !integerInBereik(aantalVakjesPerRij, 1, 6)) {
+    std::cout << "Waarden buiten toegestane bereik \n";
+    return false;
+  }
+
   return true;
 }
 
@@ -132,10 +115,21 @@ bool TegelSpel::leesSpelers(std::ifstream& fin) {
       std::cout << "Fout bij inlezen data van speler1 \n";
       return false;
     }
+
+    if ((speler1[i][0] != 0 && speler1[i][1] != 0)) {
+      std::cout << "Ongeldige waarden voor speler1 \n";
+      return false;
+    }
   }
+
   for (int i = 0; i < aantalRijenOpBord; i++) {
     if (!(fin >> speler2[i][0] >> speler2[i][1])) {
       std::cout << "Fout bij inlezen data van speler2 \n";
+      return false;
+    }
+
+    if ((speler2[i][0] != 0 && speler2[i][1] != 0)) {
+      std::cout << "Ongeldige waarden voor speler2 \n";
       return false;
     }
   }
@@ -150,7 +144,7 @@ bool TegelSpel::leesBeurt(std::ifstream& fin) {
   return true;
 }
 
-void TegelSpel::bepaalTegels() {
+bool TegelSpel::bepaalTegels() {
   schalen.resize(aantalSchalen, std::vector<char>(maximumAantalTegels));
 
   size_t pos = 0;
@@ -162,11 +156,37 @@ void TegelSpel::bepaalTegels() {
       } else {
         schalen[i][j] = '\0';
       }
+
+      if (j > aantalVakjesPerRij) {
+        std::cout << "Ongeldige aantal tegels per rij \n";
+        return false;
+      }
     }
   }
+  return true;
 }
 
-//*************************************************************************
+bool TegelSpel::leesInSpel (const char* invoernaam) {
+  std::ifstream fin;   
+  fin.open(invoernaam); 
+
+  if (!fin) {  
+    std::cout << "Ongeldige bestandsnaam";
+    return false;
+  } 
+
+  if (!leesPot(fin)) return false;
+  if (!leesSchalenTegels(fin)) return false;
+  if (!leesRijenVakjes(fin)) return false;
+  if (!leesSpelers(fin)) return false;
+  if (!leesBeurt(fin)) return false;
+  if (!bepaalTegels()) return false;
+
+  std::cout << "Spel succesvol ingelezen! \n";
+
+  fin.close();
+  return true;
+}
 
 bool TegelSpel::eindstand ()
 {
@@ -198,7 +218,6 @@ for (int i = 0; i < aantalSchalen; i++) {
 
   std::cout << "Speler-aan-beurt: " << (huidigeBeurt == 0 ? "Speler 1" : "Speler 2") << "\n";
 }
-
 
 //*************************************************************************
 

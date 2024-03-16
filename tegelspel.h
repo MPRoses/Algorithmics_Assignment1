@@ -12,38 +12,20 @@ class TegelSpel {
   public:
     //default constructor
     TegelSpel ();
-    // Retourneerd het aantal schalen van het huidige spel
+    
+    // Retourneerd het aantal schalen
     int getSchalen ();
+
     // Retourneerd de inhoud van de pot
     string getPot ();
 
     // Retourneerd vector,[schaal][Paar[aantalG, anatalB]]
     vector< pair <int,int> > getInhoudSchalen ();
 
-    // Getter voor inhoud rijen van een speler
-    // Retourneer:
-    // * een vector met voor elke rij (in een of andere volgorde) van speler
-    //   `speler' een tweetal (aantalG,aantalB): het aantal gele,
-    //   respectievelijk blauwe tegels in die rij
+    // Retourneerd vector,[schaal][Paar[aantalG, anatalB]] voor speler x
     vector< pair <int,int> > getInhoudRijen (int speler);
 
-    // Lees een spel in vanuit tekstbestand invoernaam, mogelijk al (deels)
-    // gevuld met tegels.
-    // Controleer daarbij
-    // * of het bestand wel te openen is,
-    // * of de pot wel allemaal tegels (letters) 'g' en 'b' bevat
-    // * of de parameters M, N, K en L uit de opdracht binnen
-    //   de grenzen van de opdracht vallen
-    // * of de inhoud van elke rij van de spelers klopt met de regels van
-    //   het spel:
-    //   - OF 0 tegels, OF alleen gele tegels OF alleen blauwe tegels
-    //   - het aantal tegels in de rij past ook echt in de rij (is <= L)
-    // Retourneer:
-    // * true, als aan alle voorwaarden is voldaan
-    // * false, als niet aan alle voorwaarden is voldaan
-    // Post:
-    // * Als aan alle voorwaarden is voldaan, is het spel met de tegels
-    //   opgeslagen in membervariabelen, en staat speler-aan-beurt goed.
+    // Leest file en checkt of het voldoet aan de speleisen
     bool leesInSpel (const char* invoernaam);
 
     // Controleer of we een eindstand hebben bereikt, dat wil zeggen:
@@ -165,7 +147,7 @@ class TegelSpel {
     bool leesRijenVakjes(std::ifstream& fin);
     bool leesSpelers(std::ifstream& fin);
     bool leesBeurt(std::ifstream& fin);
-    void bepaalTegels();
+    bool bepaalTegels();
 
     string huidigePot = "";
     int aantalSchalen;
@@ -173,10 +155,6 @@ class TegelSpel {
     int aantalRijenOpBord;
     int aantalVakjesPerRij;
     int huidigeBeurt;
-
-    // speler1, speler2 en schalen zijn vectors i.p.v. arrays
-    // zodat er dan gedeclareerd kan worden met een 
-    // niet constante waarde; ofwel met maximumAantalTegels, aantalSchalen en aantalRijenOpBord
 
     std::vector<std::vector<char>> schalen;
     std::vector<std::vector<int>> speler1;
