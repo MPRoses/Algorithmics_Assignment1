@@ -12,7 +12,7 @@ class TegelSpel {
   public:
     //default constructor
     TegelSpel ();
-    
+
     // Retourneerd het aantal schalen
     int getSchalen ();
 
@@ -36,8 +36,7 @@ class TegelSpel {
     // * false, als we geen eindstand hebben bereikt
     bool eindstand ();
 
-    // Druk de hele stand (pot, schalen met inhoud, rijen van de spelers
-    // met inhoud, speler-aan-beurt) af op het scherm.
+    // Druk de hele stand (pot, schalen met inhoud, rijen van de spelers met inhoud, speler-aan-beurt) af op het scherm.
     void drukAf ();
 
     // Bepaal alle verschillende, geldige zetten (schaal,kleur) in de huidige
@@ -58,10 +57,10 @@ class TegelSpel {
     // tegels kiezen van schaal `schaal' van kleur `kleur', en die in
     // de bijpassende rij leggen.
     // Controleer eerst of het wel een geldige zet is, dat wil zeggen,
-    // - of het geen eindstand is
-    // - of `schaal' een geldige nummer is voor de schaal
-    // - of `kleur' een geldige kleur is, die ook voorkomt in schaal `schaal'
-    // - of de speler aan beurt al deze tegels ook echt kwijt kan in een rij
+    // - of het geen eindstand is - LATER
+    // - of `schaal' een geldige nummer is voor de schaal - CHECKED
+    // - of `kleur' een geldige kleur is, die ook voorkomt in schaal `schaal' - CHECKED
+    // - of de speler aan beurt al deze tegels ook echt kwijt kan in een rij - unsure
     // Retourneer:
     // * true, als dit een geldige zet is
     // * false, als dit geen geldige zet is.
@@ -159,7 +158,6 @@ class TegelSpel {
     std::vector<std::vector<char>> schalen;
     std::vector<std::vector<int>> speler1;
     std::vector<std::vector<int>> speler2;
-
 
 };
 
