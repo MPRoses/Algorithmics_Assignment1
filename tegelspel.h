@@ -5,8 +5,18 @@
 
 #include <vector>
 #include <string>
+#include <stack>
 #include "constantes.h"
 using namespace std;
+
+// stack voor bijhouden van zetten 
+struct spelState {
+  string huidigePot;
+  vector<vector<int>> speler1;
+  vector<vector<int>> speler2;
+  int huidigeBeurt;
+};
+
 
 class TegelSpel { 
   public:
@@ -28,43 +38,19 @@ class TegelSpel {
     // Leest file en checkt of het voldoet aan de speleisen
     bool leesInSpel (const char* invoernaam);
 
-    // retourneerd true als een eindstand bereikt is
+    // Retourneerd true als een eindstand bereikt is
     bool eindstand ();
 
     // Druk de hele stand (pot, schalen met inhoud, rijen van de spelers met inhoud, speler-aan-beurt) af op het scherm.
     void drukAf ();
 
-    // Bepaal alle verschillende, geldige zetten (schaal,kleur) in de huidige
-    // stand. Twee zetten zijn verschillend als
-    // * ze schalen betreffen met verschillende inhoud (qua aantal gele tegels
-    //   en aantal blauwe tegels)
-    // * of verschillende kleuren betreffen
-    // (of beide).
-    // Een zet met een kleur die niet voorkomt op de schaal is niet geldig.
-    // Een zet met een kleur die vaker voorkomt op de schaal dan de speler
-    // in een rij kwijt kan, is niet geldig.
-    // Retourneer:
-    // * Een vector met alle verschillende geldige zetten (schaal,kleur);
-    //   de volgorde van de zetten maakt niet uit.
+    // Retourneerd vector,Paar[int (schaal), char (kleur)]
     vector< pair<int,char> > bepaalVerschillendeZetten ();
 
-    // Maakt op basis van gekozen schaal, kleur en huidige speler
-    // de best mogelijke zet.
+    // Maakt op basis van gekozen schaal en kleur "best" mogelijke zet voor de huidige speler.
     bool doeZet (int schaal, char kleur);
 
-    // Maak de laatst gedane zet ongedaan.
-    // Controleer eerst of er wel een zet is om ongedaan te maken,
-    // opgeslagen in de lijst met zetten.
-    // Retourneer:
-    // * true, als er een zet was om ongedaan te maken
-    // * false, anders
-    // Post:
-    // * als returnwaarde true is, is de zet ongedaan gemaakt:
-    //   - de speler aan beurt is teruggewisseld,
-    //   - tegels zijn terug van schaal naar pot
-    //   - uit schaal gehaalde tegels zijn terug van rij naar schaal
-    //   - de zet is van de lijst met uitgevoerde zetten gehaald
-    // * als returnwaarde false is, is de stand niet veranderd
+    // Retourneerd true als er een zet is ongedaan anders false
     bool unDoeZet ();
 
     // Bepaal met behulp van brute force en recursie de eindscore voor
@@ -83,14 +69,7 @@ class TegelSpel {
     // * de stand in het spel is nog onveranderd
     int besteScore (pair<int,char> &besteZet, long long &aantalStanden);
 
-    // Bepaal een `goede zet' voor de speler die in de huidige stand aan
-    // aan de beurt is: een zet die ertoe leidt dat hij (na deze ene zet)
-    // met nrSimulaties keer random uitspelen een zo hoog mogelijke
-    // gemiddelde score haalt.
-    // Controleer eerst of de huidige stand geen eindstand is.
-    // Retourneer:
-    // * de gevonden zet (rij,kolom), als het geen eindstand is
-    // * een passende default waarde, als het al wel een eindstand is
+    // Retourneerd de gevonden zet(rij, kolom) zolang het spel spel nog bezig is, anders zet(-1, '')
     pair<int,char> bepaalGoedeZet (int nrSimulaties);
 
     // Speel het spel uit vanaf de huidige stand. Laat hierbij de speler
@@ -127,6 +106,7 @@ class TegelSpel {
     bool bepaalTegels();
     bool zetEisen(int schaal, char kleur, int aantal);
     bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
+    int berekenScore(vector<vector<int>>* spelerRijen);
 
     string huidigePot = "";
     int aantalSchalen;
@@ -141,6 +121,8 @@ class TegelSpel {
     std::vector<std::vector<char>> schalen;
     std::vector<std::vector<int>> speler1;
     std::vector<std::vector<int>> speler2;
+
+    stack<spelState> spelGeschiedenis;
 
 };
 
