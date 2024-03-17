@@ -28,12 +28,7 @@ class TegelSpel {
     // Leest file en checkt of het voldoet aan de speleisen
     bool leesInSpel (const char* invoernaam);
 
-    // Controleer of we een eindstand hebben bereikt, dat wil zeggen:
-    // of een speler alle rijen vol heeft, of dat er geen enkele geldige zet
-    // is voor de speler die aan de beurt is.
-    // Retourneer:
-    // * true, als we een eindstand hebben bereikt
-    // * false, als we geen eindstand hebben bereikt
+    // retourneerd true als een eindstand bereikt is
     bool eindstand ();
 
     // Druk de hele stand (pot, schalen met inhoud, rijen van de spelers met inhoud, speler-aan-beurt) af op het scherm.
@@ -53,26 +48,8 @@ class TegelSpel {
     //   de volgorde van de zetten maakt niet uit.
     vector< pair<int,char> > bepaalVerschillendeZetten ();
 
-    // Doe een zet voor de speler die aan de beurt is:
-    // tegels kiezen van schaal `schaal' van kleur `kleur', en die in
-    // de bijpassende rij leggen.
-    // Controleer eerst of het wel een geldige zet is, dat wil zeggen,
-    // - of het geen eindstand is - LATER
-    // - of `schaal' een geldige nummer is voor de schaal - CHECKED
-    // - of `kleur' een geldige kleur is, die ook voorkomt in schaal `schaal' - CHECKED
-    // - of de speler aan beurt al deze tegels ook echt kwijt kan in een rij - unsure
-    // Retourneer:
-    // * true, als dit een geldige zet is
-    // * false, als dit geen geldige zet is.
-    // Post:
-    // * als het een geldige zet is, is de zet uitgevoerd:
-    //   - de tegels van de gekozen kleur zijn van de gekozen schaal
-    //     verwijderd, en in de bijpassende rij van de speler aan beurt gelegd
-    //   - de schaal is voor zover mogelijk aangevuld met tegels
-    //     uit de pot
-    //   - de speler aan beurt is gewisseld
-    //   - de zet is toegevoegd aan de lijst met gedane zetten
-    // * als het geen geldige zet is, is de stand niet veranderd.
+    // Maakt op basis van gekozen schaal, kleur en huidige speler
+    // de best mogelijke zet.
     bool doeZet (int schaal, char kleur);
 
     // Maak de laatst gedane zet ongedaan.
@@ -146,7 +123,10 @@ class TegelSpel {
     bool leesRijenVakjes(std::ifstream& fin);
     bool leesSpelers(std::ifstream& fin);
     bool leesBeurt(std::ifstream& fin);
+    void verwijderEnSchuifSchalen(int schaal, char kleur);
     bool bepaalTegels();
+    bool zetEisen(int schaal, char kleur, int aantal);
+    bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
 
     string huidigePot = "";
     int aantalSchalen;
@@ -155,6 +135,9 @@ class TegelSpel {
     int aantalVakjesPerRij;
     int huidigeBeurt;
 
+    int mogelijkeZetten[11];
+    int aantalGelijkeOpties = 0;
+    int actieveKleur = 0;
     std::vector<std::vector<char>> schalen;
     std::vector<std::vector<int>> speler1;
     std::vector<std::vector<int>> speler2;

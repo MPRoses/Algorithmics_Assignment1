@@ -30,9 +30,8 @@ bool integerInBereik (int waarde, int minWaarde, int maxWaarde) {
 
 //*************************************************************************
 
-int randomGetal (int min, int max)
-{ int bereik,
-      r;
+int randomGetal (int min, int max) { 
+  int bereik, r;
 
   bereik = max - min + 1;
 
