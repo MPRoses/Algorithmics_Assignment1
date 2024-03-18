@@ -17,7 +17,6 @@ struct spelState {
   int huidigeBeurt;
 };
 
-
 class TegelSpel { 
   public:
     //default constructor
@@ -66,33 +65,47 @@ class TegelSpel {
     void doeExperiment ();
 
   private:
-    // TODO: uw eigen private memberfuncties en -variabelen
+    // hulpfuncties voor leesInSpel
     bool leesPot(std::ifstream& fin);
     bool leesSchalenTegels(std::ifstream& fin);
     bool leesRijenVakjes(std::ifstream& fin);
     bool leesSpelers(std::ifstream& fin);
     bool leesBeurt(std::ifstream& fin);
-    void verwijderEnSchuifSchalen(int schaal, char kleur);
-    bool bepaalTegels();
-    bool zetEisen(int schaal, char kleur, int aantal);
-    bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
-    int berekenScore(vector<vector<int>>* spelerRijen);
-    void initBord();
 
+    // bepaalt op basis van huidigePot de schalen
+    bool bepaalTegels();
+
+    // Update huidigePot en schalen na een zet
+    void verwijderEnSchuifSchalen(int schaal, char kleur);
+
+    // voldoet gegeven zet aan de zeteisen?
+    bool zetEisen(int schaal, char kleur, int aantal);
+    // kijkt of er voor meegegeven waarden een valide zet is
+    bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
+
+    // Telt aantal volle rijen en berekend score
+    int berekenScore(vector<vector<int>>* spelerRijen);
+
+    // startvariabelen
     string huidigePot = "";
     int aantalSchalen;
     int maximumAantalTegels;
     int aantalRijenOpBord;
     int aantalVakjesPerRij;
+    // welke speler is aan zet
     int huidigeBeurt;
+    int actieveKleur = 0;
 
+    // houdt mogelijke zetten bij
     int mogelijkeZetten[11];
     int aantalGelijkeOpties = 0;
-    int actieveKleur = 0;
+
+    // data voor rijen spelers en de schalen 
     std::vector<std::vector<char>> schalen;
     std::vector<std::vector<int>> speler1;
     std::vector<std::vector<int>> speler2;
 
+    // stack voor bijhouden gedane zetten
     stack<spelState> spelGeschiedenis;
 
 };

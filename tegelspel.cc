@@ -4,27 +4,20 @@
 #include "standaard.h"
 #include <iomanip>  // setw
 #include <fstream>   // file lezen
-#include <algorithm> // count
 #include <iostream>
-#include <chrono>
-#include <thread>
-#include <climits>
+#include <climits> // int_max en int_min
+#include <ctime>
 
-//*************************************************************************
 
-TegelSpel::TegelSpel ()
-{
-  // TODO: implementeer zo nodig deze constructor
+TegelSpel::TegelSpel(){} 
 
-}  // default constructor
-
-int TegelSpel::getSchalen () {
+int TegelSpel::getSchalen() {
   return aantalSchalen;
-}
+}//getSchalen
 
-string TegelSpel::getPot () { 
+string TegelSpel::getPot() { 
   return huidigePot;
-}
+}//getPot
 
 std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
   std::vector<std::pair<int, int>> inhoudSchalen(aantalSchalen);
@@ -43,9 +36,9 @@ std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
   }
 
   return inhoudSchalen;
-}
+}//getInhoudSchalen
 
-std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen (int speler) {
+std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen(int speler) {
   std::vector<std::pair<int, int>> inhoud(aantalRijenOpBord); 
   std::vector<std::vector<int>>* spelerRijen;
 
@@ -63,7 +56,7 @@ std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen (int speler) {
   }
 
   return inhoud;
-}
+}//getInhoudRijen
 
 bool TegelSpel::leesPot(std::ifstream& fin) {
   std::string regel;
@@ -77,7 +70,7 @@ bool TegelSpel::leesPot(std::ifstream& fin) {
     huidigePot = regel;
   }
   return true;
-}
+}//leesPot
 
 bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
   if (!(fin >> aantalSchalen >> maximumAantalTegels)) {
@@ -91,7 +84,7 @@ bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
   }
 
   return true;
-}
+}//leesSchalenTegels
 
 bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
   if (!(fin >> aantalRijenOpBord >> aantalVakjesPerRij)) {
@@ -105,7 +98,7 @@ bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
   }
 
   return true;
-}
+}//leesRijenVakjes
 
 bool TegelSpel::leesSpelers(std::ifstream& fin) {
   speler1.resize(aantalRijenOpBord, std::vector<int>(2));
@@ -135,7 +128,7 @@ bool TegelSpel::leesSpelers(std::ifstream& fin) {
     }
   }
   return true;
-}
+}//leesSpelers
 
 bool TegelSpel::leesBeurt(std::ifstream& fin) {
   if (!(fin >> huidigeBeurt) || (huidigeBeurt != 0 && huidigeBeurt != 1)) {
@@ -143,7 +136,7 @@ bool TegelSpel::leesBeurt(std::ifstream& fin) {
     return false;
   } 
   return true;
-}
+}//leesBeurt
 
 bool TegelSpel::bepaalTegels() {
   schalen.resize(aantalSchalen, std::vector<char>(maximumAantalTegels));
@@ -165,9 +158,9 @@ bool TegelSpel::bepaalTegels() {
     }
   }
   return true;
-}
+}//bepaalTegels
 
-bool TegelSpel::leesInSpel (const char* invoernaam) {
+bool TegelSpel::leesInSpel(const char* invoernaam) {
   std::ifstream fin;   
   fin.open(invoernaam); 
 
@@ -187,7 +180,7 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
 
   fin.close();
   return true;
-}
+}//leesInSpel
 
 bool TegelSpel::eindstand() {
   // check if game has ended, returns true if game is finished, otherwise false
@@ -294,7 +287,13 @@ void TegelSpel::verwijderEnSchuifSchalen(int schaal, char kleur) {
         }
     }
 
-    huidigePot.erase(std::remove(huidigePot.begin(), huidigePot.end(), '\0'), huidigePot.end());
+    std::string newPot;
+    for (char c : huidigePot) {
+      if (c != '\0') {
+        newPot += c;
+      }
+    }
+    huidigePot = newPot;
 
     bepaalTegels();
 }//verwijderEnSchuifSchalen
@@ -343,7 +342,6 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
   }
 
   if (aantalFouteOpties == aantalRijenOpBord) {
-   // cout << "geen opties in rij \n";
     return false;
   }
 
@@ -402,27 +400,6 @@ bool TegelSpel::unDoeZet() {
 
   return true;
 }//unDoeZet
-/*
-int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
-  cout << "1 \n";
-  TegelSpel kopie = *this;
-
-  if (kopie.eindstand()) {
-    return berekenScore(kopie.huidigeBeurt == 0 ? &speler1 : &speler2);
-  }
-
-  besteZet = kopie.bepaalGoedeZet(NrSimulaties);
-  cout << "2 \n";
-
-  kopie.doeZet(besteZet.first, besteZet.second);
-  cout << "3 \n";
-  pair<int,char> volgendeZet;
-  //int score = -kopie.besteScore(volgendeZet, aantalStanden);
-  cout << "4 \n";
-  aantalStanden++;
-
-  return 0;
-}//besteScore */
 
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   if (eindstand()) {
@@ -450,9 +427,7 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   }
 
   return besteScore;
-}
-
-
+}//besteScore
 
 int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
   int volleRijenSpeler1 = 0;
@@ -475,6 +450,7 @@ int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
   int score = volleRijenSpeler1 - volleRijenSpeler2;
   return score;
 }//berekenScore
+
 pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) { 
   if (eindstand()) return make_pair(-1, ' ');
 
@@ -507,13 +483,8 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
   }
 
   return goedeZet;
-}
+}//bepaalGoedeZet
 
-// Bugfix voor bug die ik niet begreep.
-// als je bepaalGoedeScore() of doeExperiment() in een keer runned, zonder eerst bepaalGoedeZet of doeZet te runnen kom je in de derde iteratie van doeZet in een infinite loop.
-void TegelSpel::initBord() {
-  bepaalGoedeZet(NrSimulaties);
-}
 
 int TegelSpel::bepaalGoedeScore() {
   TegelSpel kopie = *this;
@@ -528,26 +499,14 @@ int TegelSpel::bepaalGoedeScore() {
       kopie.besteScore(zet, aantalStanden);
     }
     kopie.doeZet(zet.first, zet.second);
-
-    // Ik neem aan dat het "niet" de bedoeling is deze library te gebruiken
-    // ma het werkt heel eenvoudig en maakt het lekker mooi gelijk voor de gebruiker.
-    std::this_thread::sleep_for(std::chrono::milliseconds(350));
     kopie.drukAf();
   }
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
   return kopie.berekenScore(&kopie.speler1);
 }//bepaalGoedeScore
 
-int aantalX = 0;
 
 void TegelSpel::doeExperiment() {
-  if (aantalX % 2 == 0) {
-    initBord();
-  }
-  aantalX++;
-  
   TegelSpel kopie = *this;
   int aantalZetten = 0;
 
@@ -558,15 +517,16 @@ void TegelSpel::doeExperiment() {
   } 
 
   while (!kopie.spelGeschiedenis.empty()) {
-    auto start = std::chrono::high_resolution_clock::now();
+    clock_t start = clock();
+    
     pair<int,char> besteZet;
     long long aantalStanden = 0;
-    kopie.besteScore(besteZet, aantalStanden); // GETS STUCK HERE ON RUN 2
+    kopie.besteScore(besteZet, aantalStanden);
 
-    auto eind = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duur = eind - start;
+    clock_t eind = clock();
+    double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
 
-    std::cout << "De zet met behulp van besteScore duurde " << duur.count() << " om te berekenen\n";
+    std::cout << "De zet met behulp van besteScore duurde " << duration << "s om te berekenen\n";
     if (aantalZetten > 2) {
       std::cout << "gegeven dat het " << aantalZetten - 1 << " zetten vanaf de startpositie berekend is. \n";
     } else {
