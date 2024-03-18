@@ -98,7 +98,7 @@ class TegelSpel {
     int actieveKleur = 0;
 
     // houdt mogelijke zetten bij
-    int mogelijkeZetten[11];
+    int mogelijkeZetten[20];
     int aantalGelijkeOpties = 0;
 
     // data voor rijen spelers en de schalen 

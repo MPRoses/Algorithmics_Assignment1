@@ -227,7 +227,7 @@ bool TegelSpel::eindstand() {
   // controleert voor elke kleur, schaal, enz. of er een geldige zet is en zo ja, retourneert false
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
 
-  for (int schaal = 0; schaal < 2; schaal++) {
+  for (int schaal = 0; schaal < aantalSchalen; schaal++) {
     for (char kleur : {'g', 'b'}) {
       int aantal = 0;
       for (char c : schalen[schaal]) {
@@ -324,7 +324,7 @@ void TegelSpel::verwijderEnSchuifSchalen(int schaal, char kleur) {
 // Controleert of de gegeven schaal, kleur en aantal tegels
 // geldig zijn
 bool TegelSpel::zetEisen(int schaal, char kleur, int aantal) {
-  if (schaal < 0 || schaal > 1) {
+  if (schaal < 0 || schaal > (aantalSchalen)) {
     return false;
   }
 
@@ -344,7 +344,7 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
   aantalGelijkeOpties = 0;
   actieveKleur = (kleur == 'g') ? 0 : 1;
   
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 20; i++) {
     mogelijkeZetten[i] = 0;
   }
 
@@ -377,9 +377,11 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
 
 // Doet een zet voor de huidige speler basis van de schaal en kleur
 // Geeft true terug als de zet gelukt is anders false
-bool TegelSpel::doeZet (int schaal, char kleur) {
+bool TegelSpel::doeZet(int schaal, char kleur) {
+
   // bepaal aantal keer dat kleur voorkomt in gekozen schaal
-  int aantal = 0;
+  int aantal = 0; 
+  
   for (char c : schalen[schaal]) {
     if (c == kleur) {
       aantal++;
@@ -389,13 +391,18 @@ bool TegelSpel::doeZet (int schaal, char kleur) {
   // bepaal juiste rijen i.v.t. speler
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
   if (eindstand()) return false;
-  if (!zetEisen(schaal, kleur, aantal)) return false;
-    
+  if (!zetEisen(schaal, kleur, aantal)) return false; // IT CRASHES HERE
+
   // sla huidige positie op en voeg toe aan stack
   spelState huidigeState = {huidigePot, speler1, speler2, huidigeBeurt};
   spelGeschiedenis.push(huidigeState);
+  //cout << "reached \n";
 
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
+
+ // cout << "schalen size " << schalen.size() << '\n';
+ // cout << "schalen 3 item 0 " << schalen[2][0] << '\n';
+  //cout << "we gaan voor zet: ( " << schaal << "," << kleur << ") \n";
  
   verwijderEnSchuifSchalen(schaal, kleur);
 
@@ -435,22 +442,23 @@ bool TegelSpel::unDoeZet() {
 // Doet een zet terug voor de huidige speler zolang er al een zet gedaan was
 // Geeft true terug als de zet gelukt is anders false
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
+
   if (eindstand()) {
     int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
     return score;
   }
-
   int besteScore = INT_MAX;
   pair<int,char> zet;
 
   vector<pair<int,char>> mogelijkeZetten = this->bepaalVerschillendeZetten();
 
   for (auto zet : mogelijkeZetten) {
+    //cout << "readed 1 \n";
     TegelSpel kopie = *this;
     kopie.doeZet(zet.first, zet.second);
-
     pair<int,char> volgendeZet;
     int score = -kopie.besteScore(volgendeZet, aantalStanden);
+   // cout << "readed 2 \n";
     if (abs(score) < abs(besteScore)) {
       besteScore = score;
       besteZet = zet;
@@ -550,7 +558,9 @@ int TegelSpel::bepaalGoedeScore() {
 // en meet vervolgens achteruit de berekeningstijd van besteScore;
 void TegelSpel::doeExperiment() {
   TegelSpel kopie = *this;
+  kopie.spelGeschiedenis.empty();
   int aantalZetten = 0;
+
 
   while (!kopie.eindstand()) {
     pair<int,char> zet = kopie.bepaalGoedeZet(NrSimulaties);
@@ -559,12 +569,12 @@ void TegelSpel::doeExperiment() {
   } 
 
   while (!kopie.spelGeschiedenis.empty()) {
+    if (aantalZetten == 1) return;
     clock_t start = clock();
 
     pair<int,char> besteZet;
     long long aantalStanden = 0;
     kopie.besteScore(besteZet, aantalStanden);
-
     clock_t eind = clock();
     double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
 
@@ -578,4 +588,5 @@ void TegelSpel::doeExperiment() {
     aantalZetten--;
     kopie.unDoeZet();
   }
+  
 }//doeExperiment
