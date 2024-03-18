@@ -8,17 +8,21 @@
 #include <climits> // int_max en int_min
 #include <ctime>
 
-
 TegelSpel::TegelSpel(){} 
 
+// Geeft het aantal schalen in het spel terug
 int TegelSpel::getSchalen() {
   return aantalSchalen;
 }//getSchalen
 
+// Geeft de inhoud van de pot terug
 string TegelSpel::getPot() { 
   return huidigePot;
 }//getPot
 
+// Geeft een vector terug met inhoud van alle schalen
+// De vector bevat paren van ints, waar de eerste het aantal gele
+// en de tweede het aantal blauwe tegels in de schaal voorstelt
 std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
   std::vector<std::pair<int, int>> inhoudSchalen(aantalSchalen);
 
@@ -38,6 +42,9 @@ std::vector<std::pair<int, int>> TegelSpel::getInhoudSchalen() {
   return inhoudSchalen;
 }//getInhoudSchalen
 
+// Geeft een vector terug met de inhoud van alle rijen voor de gegeven speler
+// De vector bevat paren van integers, waar de eerste integer het aantal gele tegels
+// en de tweede integer het aantal blauwe tegels in de rij voorstelt
 std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen(int speler) {
   std::vector<std::pair<int, int>> inhoud(aantalRijenOpBord); 
   std::vector<std::vector<int>>* spelerRijen;
@@ -58,6 +65,8 @@ std::vector< std::pair <int,int> > TegelSpel::getInhoudRijen(int speler) {
   return inhoud;
 }//getInhoudRijen
 
+// Leest de inhoud van de pot in vanuit de gegeven inputstream
+// Geeft true terug als de pot succesvol is ingelezen, false anders
 bool TegelSpel::leesPot(std::ifstream& fin) {
   std::string regel;
   if (std::getline(fin, regel)) {
@@ -72,6 +81,9 @@ bool TegelSpel::leesPot(std::ifstream& fin) {
   return true;
 }//leesPot
 
+// Leest het aantal schalen en het maximum aantal tegels per schaal
+// in vanuit de gegeven inputstream
+// Geeft true terug als de schalen en tegels succesvol zijn ingelezen, false anders
 bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
   if (!(fin >> aantalSchalen >> maximumAantalTegels)) {
     std::cout << "Fout bij inlezen aantalSchalen en maximumAantalTegels \n";
@@ -86,6 +98,9 @@ bool TegelSpel::leesSchalenTegels(std::ifstream& fin) {
   return true;
 }//leesSchalenTegels
 
+// Leest het aantal rijen op het bord en het aantal vakjes per rij
+// in vanuit de gegeven inputstream
+// Geeft true terug als de rijen en vakjes succesvol zijn in ingelezen, false anders
 bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
   if (!(fin >> aantalRijenOpBord >> aantalVakjesPerRij)) {
     std::cout << "Fout bij inlezen aantalRijenOpBord en aantalVakjesPerRij \n";
@@ -100,6 +115,9 @@ bool TegelSpel::leesRijenVakjes(std::ifstream& fin) {
   return true;
 }//leesRijenVakjes
 
+
+// Leest de data van beide spelers in vanuit de gegeven inputstream
+// Geeft true terug als de data van beide spelers succesvol is ingelezen, false anders
 bool TegelSpel::leesSpelers(std::ifstream& fin) {
   speler1.resize(aantalRijenOpBord, std::vector<int>(2));
   speler2.resize(aantalRijenOpBord, std::vector<int>(2));
@@ -130,6 +148,8 @@ bool TegelSpel::leesSpelers(std::ifstream& fin) {
   return true;
 }//leesSpelers
 
+// Leest de beurt van de huidige speler in vanuit de gegeven inputstream
+// Geeft true terug als de beurt succesvol is ingelezen, false anders
 bool TegelSpel::leesBeurt(std::ifstream& fin) {
   if (!(fin >> huidigeBeurt) || (huidigeBeurt != 0 && huidigeBeurt != 1)) {
     std::cout << "Fout bij inlezen van de huidige beurt \n";
@@ -138,6 +158,8 @@ bool TegelSpel::leesBeurt(std::ifstream& fin) {
   return true;
 }//leesBeurt
 
+// Bepaalt de inhoud van de schalen op basis van de pot en het
+// maximum aantal tegels per schaal
 bool TegelSpel::bepaalTegels() {
   schalen.resize(aantalSchalen, std::vector<char>(maximumAantalTegels));
 
@@ -160,6 +182,8 @@ bool TegelSpel::bepaalTegels() {
   return true;
 }//bepaalTegels
 
+// Leest de data van het spel in vanuit de gegeven bestandsnaam
+// Geeft true terug als de data van het spel succesvol is ingelezen, false anders
 bool TegelSpel::leesInSpel(const char* invoernaam) {
   std::ifstream fin;   
   fin.open(invoernaam); 
@@ -182,9 +206,10 @@ bool TegelSpel::leesInSpel(const char* invoernaam) {
   return true;
 }//leesInSpel
 
+// Bepaalt of het spel afgelopen is
+// Geeft true terug als het spel afgelopen is, false anders
 bool TegelSpel::eindstand() {
-  // check if game has ended, returns true if game is finished, otherwise false
-  // case 1: either a player has all rows filled
+  // situatie 1: ofwel heeft een speler alle rijen gevuld
   for (auto* spelerRijen : {&speler1, &speler2}) {
     int count = 0;
     for (int i = 0; i < aantalRijenOpBord; i++) {
@@ -198,8 +223,8 @@ bool TegelSpel::eindstand() {
     }
   }
 
-  // case 2: current player has no valid move
-  // checks for every kleur, schaal, etc. whether there is a valid move and if so, return false
+  // situatie 2: de huidige speler heeft geen geldige zet
+  // controleert voor elke kleur, schaal, enz. of er een geldige zet is en zo ja, retourneert false
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
 
   for (int schaal = 0; schaal < 2; schaal++) {
@@ -221,6 +246,7 @@ bool TegelSpel::eindstand() {
   return true;
 }//eindstand
 
+// Druk de hele stand (pot, schalen met inhoud, rijen van de spelers met inhoud, speler-aan-beurt) af op het scherm
 void TegelSpel::drukAf() {
   std::cout << "\nInhoud van de pot: " << huidigePot << "\n";
 
@@ -242,13 +268,9 @@ void TegelSpel::drukAf() {
   std::cout << "Speler aan beurt: " << (huidigeBeurt == 0 ? "Speler 1" : "Speler 2") << "\n";
 }//drukAf
 
-// hi als je dit leest k ben t hier eig niet helemaal mee eens met een onderdeel
-// als schaal 0 en schaal 1 equivalente kleuren hebben betekend niet dat de zetten hetzelfde
-// zijn, aangezien je de verdere string huidigePot veranderd. Dat is aangezien er shift left is
-// schaal 1 schuift op 0, maar schaal 2 schuift op 1, en zolang 2 niet gelijk is aan 1 en enz. voor de hele string ofwel alle schalen zullen de zetten de toekomstige schalen anders beinvloeden
-// e.g. bgbgbgbgggbb, kies voor kleur = 'g' en schaal = 0 v 1
-// schaal(0) -> bbbgbgggbb, en uit schaal(1) volgt: bgbgbbggbb, bgbgbbggbb is niet gelijk aan bbbgbgggbb
-
+// Bepaalt alle verschillende zetten die de huidige speler kan doen
+// Geeft een vector terug met paren van integers, waar de eerste integer de
+// schaal en de tweede integer de kleur van de tegel voorstelt
 vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten() { 
   vector< pair<int,char> > zetten;
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
@@ -276,7 +298,8 @@ vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten() {
   return zetten;
 }//bepaalVerschillendeZetten
 
-
+// Verwijdert de tegels van de gekozen schaal en kleur uit de pot
+// en schuift de resterende tegels op
 void TegelSpel::verwijderEnSchuifSchalen(int schaal, char kleur) { 
     int start = schaal * maximumAantalTegels;
     int end = start + maximumAantalTegels;
@@ -298,6 +321,8 @@ void TegelSpel::verwijderEnSchuifSchalen(int schaal, char kleur) {
     bepaalTegels();
 }//verwijderEnSchuifSchalen
 
+// Controleert of de gegeven schaal, kleur en aantal tegels
+// geldig zijn
 bool TegelSpel::zetEisen(int schaal, char kleur, int aantal) {
   if (schaal < 0 || schaal > 1) {
     return false;
@@ -310,6 +335,8 @@ bool TegelSpel::zetEisen(int schaal, char kleur, int aantal) {
   return true;
 }//zetEisen
 
+// Bepaalt of de zet met de gegeven schaal, kleur en aantal tegels
+// geldig is voor de huidige speler
 bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen) {
 
   int aantalFouteOpties = 0;
@@ -348,6 +375,8 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
   return true;
 }//valideZetten
 
+// Doet een zet voor de huidige speler basis van de schaal en kleur
+// Geeft true terug als de zet gelukt is anders false
 bool TegelSpel::doeZet (int schaal, char kleur) {
   // bepaal aantal keer dat kleur voorkomt in gekozen schaal
   int aantal = 0;
@@ -383,6 +412,8 @@ bool TegelSpel::doeZet (int schaal, char kleur) {
   return true;
 }//doeZet
 
+// Doet een zet terug voor de huidige speler zolang er al een zet gedaan was
+// Geeft true terug als de zet gelukt is anders false
 bool TegelSpel::unDoeZet() {
   if (spelGeschiedenis.empty()) {
     return false; 
@@ -401,6 +432,8 @@ bool TegelSpel::unDoeZet() {
   return true;
 }//unDoeZet
 
+// Doet een zet terug voor de huidige speler zolang er al een zet gedaan was
+// Geeft true terug als de zet gelukt is anders false
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   if (eindstand()) {
     int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
@@ -429,7 +462,9 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   return besteScore;
 }//besteScore
 
+// Berekend de score voor de speler die aan de beurt is
 int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
+  // Bepaal het aantal volle rijen voor beide spelers
   int volleRijenSpeler1 = 0;
   int volleRijenSpeler2 = 0;
 
@@ -439,6 +474,7 @@ int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
     }
   }
 
+  // Bepaal de rijen van de andere speler
   vector<vector<int>>* rijenSpeler2 = (spelerRijen == &speler1) ? &speler2 : &speler1;
 
   for (auto rij : *rijenSpeler2) {
@@ -447,10 +483,14 @@ int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
     }
   }
 
+  // Bereken de score
   int score = volleRijenSpeler1 - volleRijenSpeler2;
   return score;
 }//berekenScore
 
+
+// Bepaalt een "goede" zet voor de speler die aan de beurt is
+// op basis van Monte Carlo
 pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) { 
   if (eindstand()) return make_pair(-1, ' ');
 
@@ -486,6 +526,7 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
 }//bepaalGoedeZet
 
 
+// Vergelijkt spelers die "goede" (= op basis van bepaalGoedeZet) en "beste" (= op basis van besteScore) zetten doen en retourneert de score van de huidige speler, ofwel "goede" speler
 int TegelSpel::bepaalGoedeScore() {
   TegelSpel kopie = *this;
   long long aantalStanden = 0;
@@ -505,7 +546,8 @@ int TegelSpel::bepaalGoedeScore() {
   return kopie.berekenScore(&kopie.speler1);
 }//bepaalGoedeScore
 
-
+// Loopt door naar eind op basis van zetten gemaakt door bepaalGoedeZet 
+// en meet vervolgens achteruit de berekeningstijd van besteScore;
 void TegelSpel::doeExperiment() {
   TegelSpel kopie = *this;
   int aantalZetten = 0;
@@ -518,7 +560,7 @@ void TegelSpel::doeExperiment() {
 
   while (!kopie.spelGeschiedenis.empty()) {
     clock_t start = clock();
-    
+
     pair<int,char> besteZet;
     long long aantalStanden = 0;
     kopie.besteScore(besteZet, aantalStanden);

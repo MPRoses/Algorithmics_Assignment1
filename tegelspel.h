@@ -61,7 +61,8 @@ class TegelSpel {
     // Vergelijkt spelers die "goede" (= op basis van bepaalGoedeZet) en "beste" (= op basis van besteScore) zetten doen en retourneert de score van de huidige speler, ofwel "goede" speler
     int bepaalGoedeScore ();
 
-    // werkt
+    // Loopt door naar eind op basis van zetten gemaakt door bepaalGoedeZet 
+    // en meet vervolgens achteruit de berekeningstijd van besteScore;
     void doeExperiment ();
 
   private:
@@ -105,7 +106,7 @@ class TegelSpel {
     std::vector<std::vector<int>> speler1;
     std::vector<std::vector<int>> speler2;
 
-    // stack voor bijhouden gedane zetten
+    // stack voor bijhouden zetten
     stack<spelState> spelGeschiedenis;
 
 };
