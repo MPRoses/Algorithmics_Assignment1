@@ -8,6 +8,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <climits>
 
 //*************************************************************************
 
@@ -255,7 +256,7 @@ void TegelSpel::drukAf() {
 // e.g. bgbgbgbgggbb, kies voor kleur = 'g' en schaal = 0 v 1
 // schaal(0) -> bbbgbgggbb, en uit schaal(1) volgt: bgbgbbggbb, bgbgbbggbb is niet gelijk aan bbbgbgggbb
 
-vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten () { 
+vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten() { 
   vector< pair<int,char> > zetten;
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
 
@@ -342,6 +343,7 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
   }
 
   if (aantalFouteOpties == aantalRijenOpBord) {
+   // cout << "geen opties in rij \n";
     return false;
   }
 
@@ -349,10 +351,6 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
 }//valideZetten
 
 bool TegelSpel::doeZet (int schaal, char kleur) {
-  // sla huidige positie op en voeg toe aan stack
-  spelState huidigeState = {huidigePot, speler1, speler2, huidigeBeurt};
-  spelGeschiedenis.push(huidigeState);
-
   // bepaal aantal keer dat kleur voorkomt in gekozen schaal
   int aantal = 0;
   for (char c : schalen[schaal]) {
@@ -365,6 +363,11 @@ bool TegelSpel::doeZet (int schaal, char kleur) {
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
   if (eindstand()) return false;
   if (!zetEisen(schaal, kleur, aantal)) return false;
+    
+  // sla huidige positie op en voeg toe aan stack
+  spelState huidigeState = {huidigePot, speler1, speler2, huidigeBeurt};
+  spelGeschiedenis.push(huidigeState);
+
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
  
   verwijderEnSchuifSchalen(schaal, kleur);
@@ -399,26 +402,57 @@ bool TegelSpel::unDoeZet() {
 
   return true;
 }//unDoeZet
+/*
+int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
+  cout << "1 \n";
+  TegelSpel kopie = *this;
+
+  if (kopie.eindstand()) {
+    return berekenScore(kopie.huidigeBeurt == 0 ? &speler1 : &speler2);
+  }
+
+  besteZet = kopie.bepaalGoedeZet(NrSimulaties);
+  cout << "2 \n";
+
+  kopie.doeZet(besteZet.first, besteZet.second);
+  cout << "3 \n";
+  pair<int,char> volgendeZet;
+  //int score = -kopie.besteScore(volgendeZet, aantalStanden);
+  cout << "4 \n";
+  aantalStanden++;
+
+  return 0;
+}//besteScore */
 
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   if (eindstand()) {
-    return berekenScore(huidigeBeurt == 0 ? &speler1 : &speler2);
+    int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
+    return score;
   }
 
+  int besteScore = INT_MAX;
+  pair<int,char> zet;
 
-  TegelSpel kopie = *this;
+  vector<pair<int,char>> mogelijkeZetten = this->bepaalVerschillendeZetten();
 
-  besteZet = kopie.bepaalGoedeZet(NrSimulaties);
+  for (auto zet : mogelijkeZetten) {
+    TegelSpel kopie = *this;
+    kopie.doeZet(zet.first, zet.second);
 
-  kopie.doeZet(besteZet.first, besteZet.second);
+    pair<int,char> volgendeZet;
+    int score = -kopie.besteScore(volgendeZet, aantalStanden);
+    if (abs(score) < abs(besteScore)) {
+      besteScore = score;
+      besteZet = zet;
+    }
 
-  pair<int,char> volgendeZet;
-  int score = -kopie.besteScore(volgendeZet, aantalStanden);
+    aantalStanden++;
+  }
 
-  aantalStanden++;
+  return besteScore;
+}
 
-  return score;
-}//besteScore
+
 
 int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
   int volleRijenSpeler1 = 0;
@@ -441,13 +475,12 @@ int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
   int score = volleRijenSpeler1 - volleRijenSpeler2;
   return score;
 }//berekenScore
-
 pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) { 
   if (eindstand()) return make_pair(-1, ' ');
 
   vector<pair<int, char>> mogelijkeZetten = bepaalVerschillendeZetten();
   pair<int,char> goedeZet;
-  double topScore = 0;
+  double topScore = INT_MIN;
 
   for (auto zet : mogelijkeZetten) {
     double totaleScore = 0;
@@ -463,7 +496,7 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
         kopie.doeZet(randomZet.first, randomZet.second);
       }
 
-      totaleScore += berekenScore(&kopie.speler1);
+      totaleScore += kopie.berekenScore(kopie.huidigeBeurt == 0 ? &kopie.speler1 : &kopie.speler2);
     }
 
     double gemiddeldeScore = totaleScore / nrSimulaties;
@@ -474,7 +507,7 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
   }
 
   return goedeZet;
-}//bepaalGoedeZet
+}
 
 // Bugfix voor bug die ik niet begreep.
 // als je bepaalGoedeScore() of doeExperiment() in een keer runned, zonder eerst bepaalGoedeZet of doeZet te runnen kom je in de derde iteratie van doeZet in een infinite loop.
@@ -483,7 +516,6 @@ void TegelSpel::initBord() {
 }
 
 int TegelSpel::bepaalGoedeScore() {
-  initBord();
   TegelSpel kopie = *this;
   long long aantalStanden = 0;
 
@@ -495,22 +527,28 @@ int TegelSpel::bepaalGoedeScore() {
     } else {
       kopie.besteScore(zet, aantalStanden);
     }
-
     kopie.doeZet(zet.first, zet.second);
 
     // Ik neem aan dat het "niet" de bedoeling is deze library te gebruiken
     // ma het werkt heel eenvoudig en maakt het lekker mooi gelijk voor de gebruiker.
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(350));
     kopie.drukAf();
   }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
   return kopie.berekenScore(&kopie.speler1);
 }//bepaalGoedeScore
 
+int aantalX = 0;
+
 void TegelSpel::doeExperiment() {
-  initBord();
+  if (aantalX % 2 == 0) {
+    initBord();
+  }
+  aantalX++;
+  
   TegelSpel kopie = *this;
-  kopie.spelGeschiedenis.empty();
   int aantalZetten = 0;
 
   while (!kopie.eindstand()) {
@@ -523,11 +561,12 @@ void TegelSpel::doeExperiment() {
     auto start = std::chrono::high_resolution_clock::now();
     pair<int,char> besteZet;
     long long aantalStanden = 0;
-    kopie.besteScore(besteZet, aantalStanden);
+    kopie.besteScore(besteZet, aantalStanden); // GETS STUCK HERE ON RUN 2
+
     auto eind = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duur = eind - start;
 
-    std::cout << "De zet met behulp van besteScore duurde " << duur.count() * 1000 << "ms om te berekenen\n";
+    std::cout << "De zet met behulp van besteScore duurde " << duur.count() << " om te berekenen\n";
     if (aantalZetten > 2) {
       std::cout << "gegeven dat het " << aantalZetten - 1 << " zetten vanaf de startpositie berekend is. \n";
     } else {
