@@ -6,6 +6,8 @@
 #include <fstream>   // file lezen
 #include <algorithm> // count
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 //*************************************************************************
 
@@ -188,58 +190,41 @@ bool TegelSpel::leesInSpel (const char* invoernaam) {
 
 bool TegelSpel::eindstand() {
   // check if game has ended, returns true if game is finished, otherwise false
-
-  cout << "eindstand 1 \n";
   // case 1: either a player has all rows filled
   for (auto* spelerRijen : {&speler1, &speler2}) {
-    cout << "eindstand 1 1\n";
     int count = 0;
     for (int i = 0; i < aantalRijenOpBord; i++) {
-      cout << "eindstand 1 2\n";
       if ((*spelerRijen)[i][0] == 5 || (*spelerRijen)[i][1] == 5) {
         count++;
       }
     }
-    cout << "eindstand 1 3\n";
 
-    cout << count << " count \n";
     if (count == 5) {
       return true;
     }
-    cout << "eindstand 1 4\n";
   }
 
-  cout << "eindstand 2 \n";
-
   // case 2: current player has no valid move
+  // checks for every kleur, schaal, etc. whether there is a valid move and if so, return false
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
 
   for (int schaal = 0; schaal < 2; schaal++) {
-    cout << "eindstand 2  1\n";
     for (char kleur : {'g', 'b'}) {
       int aantal = 0;
-          cout << "eindstand 2  2\n";
       for (char c : schalen[schaal]) {
         if (c == kleur) {
           aantal++;
         }
       }
       if (aantal == 0) continue;
-                cout << "eindstand 2  3\n";
 
       if (valideZetten(schaal, kleur, aantal, spelerRijen)) {
-        return true;
+        return false;
       }
-                cout << "eindstand 2  4\n";
-
     }
   }
 
-  cout << "eindstand 3 \n";
-
-
-  cout << "Het spel kan niet meer verdergaan! \n";
-  return false;
+  return true;
 }//eindstand
 
 void TegelSpel::drukAf() {
@@ -267,9 +252,8 @@ void TegelSpel::drukAf() {
 // als schaal 0 en schaal 1 equivalente kleuren hebben betekend niet dat de zetten hetzelfde
 // zijn, aangezien je de verdere string huidigePot veranderd. Dat is aangezien er shift left is
 // schaal 1 schuift op 0, maar schaal 2 schuift op 1, en zolang 2 niet gelijk is aan 1 en enz. voor de hele string ofwel alle schalen zullen de zetten de toekomstige schalen anders beinvloeden
-// e.g. bgbgbgbgggbb
-// -> bbbgbgggbb, en zelfde uit schaal 1 volgt: bgbgbbggbb, bgbgbbggbb is niet gelijk aan bbbgbgggbb
-
+// e.g. bgbgbgbgggbb, kies voor kleur = 'g' en schaal = 0 v 1
+// schaal(0) -> bbbgbgggbb, en uit schaal(1) volgt: bgbgbbggbb, bgbgbbggbb is niet gelijk aan bbbgbgggbb
 
 vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten () { 
   vector< pair<int,char> > zetten;
@@ -365,7 +349,6 @@ bool TegelSpel::valideZetten(int schaal, char kleur, int aantal, std::vector<std
 }//valideZetten
 
 bool TegelSpel::doeZet (int schaal, char kleur) {
-  
   // sla huidige positie op en voeg toe aan stack
   spelState huidigeState = {huidigePot, speler1, speler2, huidigeBeurt};
   spelGeschiedenis.push(huidigeState);
@@ -380,8 +363,7 @@ bool TegelSpel::doeZet (int schaal, char kleur) {
 
   // bepaal juiste rijen i.v.t. speler
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
-
-  if (!eindstand()) return false;
+  if (eindstand()) return false;
   if (!zetEisen(schaal, kleur, aantal)) return false;
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
  
@@ -395,23 +377,18 @@ bool TegelSpel::doeZet (int schaal, char kleur) {
   }
 
   (*spelerRijen)[gekozenRij][actieveKleur] += aantal;
-
   huidigeBeurt = (huidigeBeurt == 0) ? 1 : 0;
 
   return true;
-}  // doeZet
+}//doeZet
 
-//*************************************************************************
-
-bool TegelSpel::unDoeZet () {
+bool TegelSpel::unDoeZet() {
   if (spelGeschiedenis.empty()) {
     return false; 
   }
 
   spelState vorigeState = spelGeschiedenis.top();
   spelGeschiedenis.pop();
-
-  cout << vorigeState.huidigePot << " vorigestate huidigepot" << '\n';
 
   huidigePot = vorigeState.huidigePot;
   speler1 = vorigeState.speler1;
@@ -421,18 +398,27 @@ bool TegelSpel::unDoeZet () {
   bepaalTegels();
 
   return true;
-}  // unDoeZet
+}//unDoeZet
 
-//*************************************************************************
+int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
+  if (eindstand()) {
+    return berekenScore(huidigeBeurt == 0 ? &speler1 : &speler2);
+  }
 
-int TegelSpel::besteScore (pair<int,char> &besteZet,
-                             long long &aantalStanden)
-{
-  // TODO: implementeer deze memberfunctie
 
-  return 0;
+  TegelSpel kopie = *this;
 
-}  // besteScore
+  besteZet = kopie.bepaalGoedeZet(NrSimulaties);
+
+  kopie.doeZet(besteZet.first, besteZet.second);
+
+  pair<int,char> volgendeZet;
+  int score = -kopie.besteScore(volgendeZet, aantalStanden);
+
+  aantalStanden++;
+
+  return score;
+}//besteScore
 
 int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
   int volleRijenSpeler1 = 0;
@@ -454,13 +440,10 @@ int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
 
   int score = volleRijenSpeler1 - volleRijenSpeler2;
   return score;
-}
+}//berekenScore
 
-
-
-
-pair<int,char> TegelSpel::bepaalGoedeZet (int nrSimulaties) { 
-  if (!eindstand()) return make_pair(-1, ' ');
+pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) { 
+  if (eindstand()) return make_pair(-1, ' ');
 
   vector<pair<int, char>> mogelijkeZetten = bepaalVerschillendeZetten();
   pair<int,char> goedeZet;
@@ -491,23 +474,67 @@ pair<int,char> TegelSpel::bepaalGoedeZet (int nrSimulaties) {
   }
 
   return goedeZet;
-}  // bepaalGoedeZet
+}//bepaalGoedeZet
 
-//*************************************************************************
+// Bugfix voor bug die ik niet begreep.
+// als je bepaalGoedeScore() of doeExperiment() in een keer runned, zonder eerst bepaalGoedeZet of doeZet te runnen kom je in de derde iteratie van doeZet in een infinite loop.
+void TegelSpel::initBord() {
+  bepaalGoedeZet(NrSimulaties);
+}
 
-int TegelSpel::bepaalGoedeScore ()
-{
-  // TODO: implementeer deze memberfunctie
+int TegelSpel::bepaalGoedeScore() {
+  initBord();
+  TegelSpel kopie = *this;
+  long long aantalStanden = 0;
 
-  return 0;
+  while (!kopie.eindstand()) {
+    pair<int,char> zet;
 
-}  // bepaalGoedeScore
+    if (kopie.huidigeBeurt == 0) {
+      zet = kopie.bepaalGoedeZet(NrSimulaties);
+    } else {
+      kopie.besteScore(zet, aantalStanden);
+    }
 
-//*************************************************************************
+    kopie.doeZet(zet.first, zet.second);
 
-void TegelSpel::doeExperiment ()
-{
-  // TODO: implementeer deze memberfunctie
+    // Ik neem aan dat het "niet" de bedoeling is deze library te gebruiken
+    // ma het werkt heel eenvoudig en maakt het lekker mooi gelijk voor de gebruiker.
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    kopie.drukAf();
+  }
 
-}  // doeExperiment
+  return kopie.berekenScore(&kopie.speler1);
+}//bepaalGoedeScore
 
+void TegelSpel::doeExperiment() {
+  initBord();
+  TegelSpel kopie = *this;
+  kopie.spelGeschiedenis.empty();
+  int aantalZetten = 0;
+
+  while (!kopie.eindstand()) {
+    pair<int,char> zet = kopie.bepaalGoedeZet(NrSimulaties);
+    kopie.doeZet(zet.first, zet.second);
+    aantalZetten++;
+  } 
+
+  while (!kopie.spelGeschiedenis.empty()) {
+    auto start = std::chrono::high_resolution_clock::now();
+    pair<int,char> besteZet;
+    long long aantalStanden = 0;
+    kopie.besteScore(besteZet, aantalStanden);
+    auto eind = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duur = eind - start;
+
+    std::cout << "De zet met behulp van besteScore duurde " << duur.count() * 1000 << "ms om te berekenen\n";
+    if (aantalZetten > 2) {
+      std::cout << "gegeven dat het " << aantalZetten - 1 << " zetten vanaf de startpositie berekend is. \n";
+    } else {
+      std::cout << "gegeven dat het vanaf de startpositie berekend is. \n";
+    }
+
+    aantalZetten--;
+    kopie.unDoeZet();
+  }
+}//doeExperiment

@@ -53,46 +53,16 @@ class TegelSpel {
     // Retourneerd true als er een zet is ongedaan anders false
     bool unDoeZet ();
 
-    // Bepaal met behulp van brute force en recursie de eindscore voor
-    // de speler die in de huidige stand (= de stand van de huidige
-    // recursieve aanroep) aan de beurt is, wanneer beide spelers vanaf
-    // dit punt optimaal verder spelen.
-    // De score is gelijk aan het aantal volle rijen van de speler min
-    // het aantal volle rijen van de andere speler.
-    // Post:
-    // * als de huidige stand geen eindstand was, bevat parameter
-    //   besteZet een paar (schaal,kleur) dat de huidige speler
-    //   in de eerstvolgende zet moet kiezen, om de beste score te bereiken
-    // * anders bevat parameter besteZet een passende default waarde
-    // * aantalStanden is gelijk aan het aantal standen dat we hebben
-    //   bekeken bij het bepalen van de beste eindscore
-    // * de stand in het spel is nog onveranderd
+    // Retourneerd eindscore voor huidige speler gegeven dat beide spelers optimaal doorspelen
     int besteScore (pair<int,char> &besteZet, long long &aantalStanden);
 
-    // Retourneerd de gevonden zet(rij, kolom) zolang het spel spel nog bezig is, anders zet(-1, '')
+    // Retourneerd de gevonden beste zet(schaal, kleur) op basis van de methode Monte Carlo zolang het spel spel nog bezig is, anders zet(-1, '')
     pair<int,char> bepaalGoedeZet (int nrSimulaties);
 
-    // Speel het spel uit vanaf de huidige stand. Laat hierbij de speler
-    // die in de huidige stand aan de beurt is, steeds een `goede zet'
-    // (gevonden met bepaalGoedeZet) doen, terwijl de andere speler steeds
-    // een beste zet (gevonden met besteScore) doet.
-    // Retourneer:
-    // * de score aan het eind van het spel voor de speler die steeds
-    //   een `goede zet' gedaan heeft
-    // Post:
-    // * de huidige stand is weer hetzelfde als aan het begin van de functie
-    //   (zetten zijn dus weer ongedaan gemaakt)
+    // Vergelijkt spelers die "goede" (= op basis van bepaalGoedeZet) en "beste" (= op basis van besteScore) zetten doen en retourneert de score van de huidige speler, ofwel "goede" speler
     int bepaalGoedeScore ();
 
-    // Doe het experiment met de tijd van besteScore:
-    // * speel het spel uit vanaf de huidige stand met goedeZetten
-    // * maak vanaf die eindstand steeds een zet extra ongedaan, en kijk
-    //   hoe lang een aanroep van besteScore dan duurt
-    // * totdat de eerste goedeZet die in deze functie gedaan is, ook
-    //   ongedaan is gemaakt, of het wachten op de uitkomst van besteScore
-    //   te lang duurt
-    // Post:
-    // * de huidige stand is weer hetzelfde als aan het begin van de functie
+    // werkt
     void doeExperiment ();
 
   private:
@@ -107,6 +77,7 @@ class TegelSpel {
     bool zetEisen(int schaal, char kleur, int aantal);
     bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
     int berekenScore(vector<vector<int>>* spelerRijen);
+    void initBord();
 
     string huidigePot = "";
     int aantalSchalen;
