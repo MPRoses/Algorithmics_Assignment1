@@ -472,10 +472,8 @@ bool TegelSpel::unDoeZet() {
   return true;
 }//unDoeZet
 
-// Doet een zet terug voor de huidige speler zolang er al een zet gedaan was
-// Geeft true terug als de zet gelukt is anders false
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
-
+  
   if (eindstand()) {
     int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
     return score;
@@ -486,6 +484,7 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   vector<pair<int,char>> mogelijkeZetten = this->bepaalVerschillendeZetten();
 
   for (auto zet : mogelijkeZetten) {
+    aantalStanden++;
     TegelSpel kopie = *this;
     kopie.doeZet(zet.first, zet.second);
     pair<int,char> volgendeZet;
@@ -495,8 +494,6 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
       besteScore = score;
       besteZet = zet;
     }
-
-    aantalStanden++;
   }
 
   return besteScore;
@@ -589,9 +586,10 @@ int TegelSpel::bepaalGoedeScore() {
 
 // Loopt door naar eind op basis van zetten gemaakt door bepaalGoedeZet 
 // en meet vervolgens achteruit de berekeningstijd van besteScore;
-void TegelSpel::doeExperiment() {
+void TegelSpel::doeExperiment() { // BROKEN
   TegelSpel kopie = *this;
   int aantalZetten = 0;
+    long long aantalStanden = 0;
 
   // Play the game to the end
   while (!kopie.eindstand()) {
@@ -600,12 +598,12 @@ void TegelSpel::doeExperiment() {
     aantalZetten++;
   } 
 
+  pair<int,char> besteZet;
+
   // Undo each move and measure the time it takes for besteScore to run
   while (!kopie.spelGeschiedenis.empty()) {
     clock_t start = clock();
 
-    pair<int,char> besteZet;
-    long long aantalStanden = 0;
     kopie.besteScore(besteZet, aantalStanden);
     clock_t eind = clock();
     double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC * 1000;

@@ -56,7 +56,7 @@ void roepBesteScoreAan (TegelSpel *s1)
 { clock_t t1, t2;
   pair<int,char> besteZet;
   int score;
-  long long aantalStanden;  // aantal bekeken standen bij aanroep besteScore
+  long long aantalStanden = 0;  // aantal bekeken standen bij aanroep besteScore
 
   t1 = clock ();
   score = s1 -> besteScore (besteZet, aantalStanden);
