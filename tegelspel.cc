@@ -179,6 +179,11 @@ bool TegelSpel::bepaalTegels() {
       }
     }
   }
+
+  if (pos > 0) {
+    huidigePot.erase(0, pos);
+  }
+
   return true;
 }//bepaalTegels
 
@@ -262,7 +267,16 @@ void TegelSpel::drukAf() {
   // setw wordt hier gebruikt zodat ik geen whitespace hoef te tellen
   std::cout << std::setw(15) << "Speler1" << std::setw(13) << "Speler2\n";
   for (int i = 0; i < aantalRijenOpBord; i++) {
-    std::cout << "Rij " << i+1 << " :" << std::setw(4) << speler1[i][0] << " " << speler1[i][1] << std::setw(10) << speler2[i][0] << " " << speler2[i][1] << "\n";
+    std::cout << "Rij " << i+1;
+    
+    if (i >= 9) {
+      std::cout << ":";
+    } else {
+      std::cout << " :";
+    }
+
+    cout << std::setw(4) << speler1[i][0] << " " << speler1[i][1] << std::setw(10) << speler2[i][0] << " " << speler2[i][1] << "\n";
+
   }
 
   std::cout << "Speler aan beurt: " << (huidigeBeurt == 0 ? "Speler 1" : "Speler 2") << "\n";
@@ -271,54 +285,72 @@ void TegelSpel::drukAf() {
 // Bepaalt alle verschillende zetten die de huidige speler kan doen
 // Geeft een vector terug met paren van integers, waar de eerste integer de
 // schaal en de tweede integer de kleur van de tegel voorstelt
-vector< pair<int,char> > TegelSpel::bepaalVerschillendeZetten() { 
-  vector< pair<int,char> > zetten;
+vector<pair<int,char>> TegelSpel::bepaalVerschillendeZetten() { 
+  vector<pair<int,char>> zetten;
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
 
+  // Create variables to store the minimum scale for each color
+  vector<int> aantalG(schalen.size(), 0);
+  vector<int> aantalB(schalen.size(), 0);
+
+  // write the new code for the required question here
   for (size_t i = 0; i < schalen.size(); i++) {
-    int aantalG = 0;
-    int aantalB = 0;
     for (char c : schalen[i]) {
       if (c == 'g') {
-        aantalG++;
+        aantalG[i]++;
       } else if (c == 'b') {
-        aantalB++;
+        aantalB[i]++;
+      }
+    }
+  }
+
+  vector<bool> isToegevoegd(schalen.size(), false);
+
+
+  for (size_t i = 0; i < schalen.size(); i++) {
+    // check voor duplicaten
+    bool dupliG = false;
+    bool dupliB = false;
+
+    if (i != 0 ) {
+      for (size_t j = 0; j < schalen.size(); j++) {
+        if (i != j && aantalG[i] == aantalG[j] && isToegevoegd[j]) {
+          dupliG = true;
+        }
+        if (i != j && aantalB[i] == aantalB[j] && isToegevoegd[j]) {
+          dupliB = true;
+        }
       }
     }
 
-    if (aantalG > 0 && valideZetten(i, 'g', aantalG, spelerRijen)) {
+    // als geen dupli en de zet is valide:
+    if (!dupliG && aantalG[i] > 0 && valideZetten(i, 'g', aantalG[i], spelerRijen)) {
       zetten.push_back(make_pair(i, 'g'));
+      isToegevoegd[i] = true;
     }
-
-    if (aantalB > 0 && valideZetten(i, 'b', aantalB, spelerRijen)) {
+    
+    if (!dupliB && aantalB[i] > 0 && valideZetten(i, 'b', aantalB[i], spelerRijen)) {
       zetten.push_back(make_pair(i, 'b'));
+      isToegevoegd[i] = true;
     }
   }
 
   return zetten;
-}//bepaalVerschillendeZetten
+}
 
 // Verwijdert de tegels van de gekozen schaal en kleur uit de pot
 // en schuift de resterende tegels op
 void TegelSpel::verwijderEnSchuifSchalen(int schaal, char kleur) { 
-    int start = schaal * maximumAantalTegels;
-    int end = start + maximumAantalTegels;
-
-    for (int i = start; i < end; i++) {
-        if (huidigePot[i] == kleur) {
-            huidigePot[i] = '\0';
-        }
-    }
-
-    std::string newPot;
-    for (char c : huidigePot) {
-      if (c != '\0') {
-        newPot += c;
+  for (size_t i = 0; i < schalen[schaal].size(); i++) {
+    if (schalen[schaal][i] == kleur) {
+      if (!huidigePot.empty()) {
+        schalen[schaal][i] = huidigePot[0];
+        huidigePot.erase(0,1);
+      } else {
+        schalen[schaal][i] = '\0';
       }
     }
-    huidigePot = newPot;
-
-    bepaalTegels();
+  }
 }//verwijderEnSchuifSchalen
 
 // Controleert of de gegeven schaal, kleur en aantal tegels
@@ -392,12 +424,6 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
   if (eindstand()) return false;
   if (!zetEisen(schaal, kleur, aantal)) return false; // IT CRASHES HERE
-
-  // sla huidige positie op en voeg toe aan stack
-  spelState huidigeState = {huidigePot, speler1, speler2, huidigeBeurt};
-  spelGeschiedenis.push(huidigeState);
-  //cout << "reached \n";
-
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
 
  // cout << "schalen size " << schalen.size() << '\n';
@@ -405,6 +431,11 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
   //cout << "we gaan voor zet: ( " << schaal << "," << kleur << ") \n";
  
   verwijderEnSchuifSchalen(schaal, kleur);
+
+  // sla huidige positie op en voeg toe aan stack
+  spelState huidigeState = {huidigePot, speler1, speler2, schalen, huidigeBeurt};
+  spelGeschiedenis.push(huidigeState);
+  //cout << "reached \n";
 
   int gekozenRij = 0;
   if (aantalGelijkeOpties > 0) {
@@ -415,6 +446,9 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
 
   (*spelerRijen)[gekozenRij][actieveKleur] += aantal;
   huidigeBeurt = (huidigeBeurt == 0) ? 1 : 0;
+
+
+
 
   return true;
 }//doeZet
@@ -432,9 +466,8 @@ bool TegelSpel::unDoeZet() {
   huidigePot = vorigeState.huidigePot;
   speler1 = vorigeState.speler1;
   speler2 = vorigeState.speler2;
+  schalen = vorigeState.schalen;
   huidigeBeurt = vorigeState.huidigeBeurt;
-
-  bepaalTegels();
 
   return true;
 }//unDoeZet
@@ -453,12 +486,11 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
   vector<pair<int,char>> mogelijkeZetten = this->bepaalVerschillendeZetten();
 
   for (auto zet : mogelijkeZetten) {
-    //cout << "readed 1 \n";
     TegelSpel kopie = *this;
     kopie.doeZet(zet.first, zet.second);
     pair<int,char> volgendeZet;
     int score = -kopie.besteScore(volgendeZet, aantalStanden);
-   // cout << "readed 2 \n";
+
     if (abs(score) < abs(besteScore)) {
       besteScore = score;
       besteZet = zet;
@@ -533,6 +565,7 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
   return goedeZet;
 }//bepaalGoedeZet
 
+// bruh
 
 // Vergelijkt spelers die "goede" (= op basis van bepaalGoedeZet) en "beste" (= op basis van besteScore) zetten doen en retourneert de score van de huidige speler, ofwel "goede" speler
 int TegelSpel::bepaalGoedeScore() {
@@ -558,35 +591,29 @@ int TegelSpel::bepaalGoedeScore() {
 // en meet vervolgens achteruit de berekeningstijd van besteScore;
 void TegelSpel::doeExperiment() {
   TegelSpel kopie = *this;
-  kopie.spelGeschiedenis.empty();
   int aantalZetten = 0;
 
-
+  // Play the game to the end
   while (!kopie.eindstand()) {
     pair<int,char> zet = kopie.bepaalGoedeZet(NrSimulaties);
     kopie.doeZet(zet.first, zet.second);
     aantalZetten++;
   } 
 
+  // Undo each move and measure the time it takes for besteScore to run
   while (!kopie.spelGeschiedenis.empty()) {
-    if (aantalZetten == 1) return;
     clock_t start = clock();
 
     pair<int,char> besteZet;
     long long aantalStanden = 0;
     kopie.besteScore(besteZet, aantalStanden);
     clock_t eind = clock();
-    double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
+    double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC * 1000;
 
-    std::cout << "De zet met behulp van besteScore duurde " << duration << "s om te berekenen\n";
-    if (aantalZetten > 2) {
-      std::cout << "gegeven dat het " << aantalZetten - 1 << " zetten vanaf de startpositie berekend is. \n";
-    } else {
-      std::cout << "gegeven dat het vanaf de startpositie berekend is. \n";
-    }
+    std::cout << "De zet met behulp van besteScore duurde " << duration << "ms om te berekenen\n";
+    std::cout << "gegeven dat het " << aantalZetten << " zetten vanaf de startpositie berekend is. \n";
 
     aantalZetten--;
     kopie.unDoeZet();
   }
-  
-}//doeExperiment
+}

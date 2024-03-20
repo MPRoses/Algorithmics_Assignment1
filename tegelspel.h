@@ -14,6 +14,7 @@ struct spelState {
   string huidigePot;
   vector<vector<int>> speler1;
   vector<vector<int>> speler2;
+  vector<vector<char>> schalen;
   int huidigeBeurt;
 };
 
@@ -97,7 +98,7 @@ class TegelSpel {
     int huidigeBeurt;
     int actieveKleur = 0;
 
-    // houdt mogelijke zetten bij
+    // houdt mogelijke rijen van zetten bij
     int mogelijkeZetten[20];
     int aantalGelijkeOpties = 0;
 
