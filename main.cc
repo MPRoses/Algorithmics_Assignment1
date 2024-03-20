@@ -52,23 +52,24 @@ int keuzeUitMenu ()
 
 // Roep s1->besteScore aan, meet de benodigde tijd, en zet de relevante
 // data op het scherm.
-void roepBesteScoreAan (TegelSpel *s1)
-{ clock_t t1, t2;
+void roepBesteScoreAan (TegelSpel *s1) { 
   pair<int,char> besteZet;
-  int score;
   long long aantalStanden = 0;  // aantal bekeken standen bij aanroep besteScore
 
-  t1 = clock ();
-  score = s1 -> besteScore (besteZet, aantalStanden);
-  t2 = clock ();
+  clock_t start = clock();
+  int score = s1 -> besteScore(besteZet, aantalStanden);
+  clock_t eind = clock();
+
+  double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
+
   cout << endl;
   cout << "Beste score is: " << score << endl;
   cout << "Een beste zet is: (" << besteZet.first << "," << besteZet.second
-       << ")" << endl;
+<< ")" << endl;
   cout << "We hebben hiervoor " << aantalStanden
        << " standen bekeken." << endl;
-  cout << "Dit kostte " << (t2-t1) << " clock ticks, ofwel "
-       << (((double)(t2-t1))/CLOCKS_PER_SEC) << " seconden." << endl;
+  cout << "Dit kostte " << (eind-start) << " clock ticks, ofwel "
+       << duration << " seconden." << endl;
 
 }  // roepBesteScoreAan
 

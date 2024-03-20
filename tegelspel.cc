@@ -423,19 +423,15 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
   // bepaal juiste rijen i.v.t. speler
   std::vector<std::vector<int>>* spelerRijen = (huidigeBeurt == 0) ? &speler1 : &speler2;
   if (eindstand()) return false;
-  if (!zetEisen(schaal, kleur, aantal)) return false; // IT CRASHES HERE
+  if (!zetEisen(schaal, kleur, aantal)) return false;
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
 
- // cout << "schalen size " << schalen.size() << '\n';
- // cout << "schalen 3 item 0 " << schalen[2][0] << '\n';
-  //cout << "we gaan voor zet: ( " << schaal << "," << kleur << ") \n";
- 
   verwijderEnSchuifSchalen(schaal, kleur);
 
-  // sla huidige positie op en voeg toe aan stack
-  spelState huidigeState = {huidigePot, speler1, speler2, schalen, huidigeBeurt};
-  spelGeschiedenis.push(huidigeState);
-  //cout << "reached \n";
+  if (bijhoudenZetten == 1) {
+    spelState huidigeState = {huidigePot, speler1, speler2, schalen, huidigeBeurt};
+    spelGeschiedenis.push(huidigeState);
+  }
 
   int gekozenRij = 0;
   if (aantalGelijkeOpties > 0) {
@@ -473,7 +469,7 @@ bool TegelSpel::unDoeZet() {
 }//unDoeZet
 
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
-  
+  bijhoudenZetten = 0;
   if (eindstand()) {
     int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
     return score;
@@ -496,6 +492,7 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
     }
   }
 
+  bijhoudenZetten = 1;
   return besteScore;
 }//besteScore
 
@@ -589,7 +586,7 @@ int TegelSpel::bepaalGoedeScore() {
 void TegelSpel::doeExperiment() { // BROKEN
   TegelSpel kopie = *this;
   int aantalZetten = 0;
-    long long aantalStanden = 0;
+  long long aantalStanden = 0;
 
   // Play the game to the end
   while (!kopie.eindstand()) {
@@ -603,14 +600,16 @@ void TegelSpel::doeExperiment() { // BROKEN
   // Undo each move and measure the time it takes for besteScore to run
   while (!kopie.spelGeschiedenis.empty()) {
     clock_t start = clock();
-
     kopie.besteScore(besteZet, aantalStanden);
     clock_t eind = clock();
-    double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC * 1000;
+    double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
 
     std::cout << "De zet met behulp van besteScore duurde " << duration << "ms om te berekenen\n";
-    std::cout << "gegeven dat het " << aantalZetten << " zetten vanaf de startpositie berekend is. \n";
-
+    if (aantalZetten > 1) {
+      std::cout << "gegeven dat het " << aantalZetten << " zetten vanaf de startpositie berekend is. \n";
+    } else {
+      std::cout << "gegeven dat het vanaf de startpositie berekend is. \n";
+    }
     aantalZetten--;
     kopie.unDoeZet();
   }

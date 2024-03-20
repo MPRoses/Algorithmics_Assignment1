@@ -97,6 +97,8 @@ class TegelSpel {
     // welke speler is aan zet
     int huidigeBeurt;
     int actieveKleur = 0;
+    // bijhouden zetten
+    int bijhoudenZetten = 1;
 
     // houdt mogelijke rijen van zetten bij
     int mogelijkeZetten[20];
