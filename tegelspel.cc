@@ -276,7 +276,6 @@ void TegelSpel::drukAf() {
     }
 
     cout << std::setw(4) << speler1[i][0] << " " << speler1[i][1] << std::setw(10) << speler2[i][0] << " " << speler2[i][1] << "\n";
-
   }
 
   std::cout << "Speler aan beurt: " << (huidigeBeurt == 0 ? "Speler 1" : "Speler 2") << "\n";
@@ -305,7 +304,6 @@ vector<pair<int,char>> TegelSpel::bepaalVerschillendeZetten() {
   }
 
   vector<bool> isToegevoegd(schalen.size(), false);
-
 
   for (size_t i = 0; i < schalen.size(); i++) {
     // check voor duplicaten
@@ -360,7 +358,7 @@ bool TegelSpel::zetEisen(int schaal, char kleur, int aantal) {
     return false;
   }
 
-  if ((kleur != 'g' && kleur != 'b') || aantal <= 0 || aantal >= aantalVakjesPerRij) {
+  if ((kleur != 'g' && kleur != 'b') || aantal <= 0 || aantal > aantalVakjesPerRij) {
     return false;
   }
 
@@ -426,12 +424,12 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
   if (!zetEisen(schaal, kleur, aantal)) return false;
   if (!valideZetten(schaal, kleur, aantal, spelerRijen)) return false;
 
-  verwijderEnSchuifSchalen(schaal, kleur);
-
-  if (bijhoudenZetten == 1) {
+  if (performance == 0) {
     spelState huidigeState = {huidigePot, speler1, speler2, schalen, huidigeBeurt};
     spelGeschiedenis.push(huidigeState);
   }
+
+  verwijderEnSchuifSchalen(schaal, kleur);
 
   int gekozenRij = 0;
   if (aantalGelijkeOpties > 0) {
@@ -442,9 +440,6 @@ bool TegelSpel::doeZet(int schaal, char kleur) {
 
   (*spelerRijen)[gekozenRij][actieveKleur] += aantal;
   huidigeBeurt = (huidigeBeurt == 0) ? 1 : 0;
-
-
-
 
   return true;
 }//doeZet
@@ -469,14 +464,13 @@ bool TegelSpel::unDoeZet() {
 }//unDoeZet
 
 int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
-  bijhoudenZetten = 0;
   if (eindstand()) {
     int score = berekenScore(this->huidigeBeurt == 0 ? &speler1 : &speler2);
     return score;
   }
   int besteScore = INT_MAX;
   pair<int,char> zet;
-
+  
   vector<pair<int,char>> mogelijkeZetten = this->bepaalVerschillendeZetten();
 
   for (auto zet : mogelijkeZetten) {
@@ -492,13 +486,12 @@ int TegelSpel::besteScore(pair<int,char> &besteZet, long long &aantalStanden) {
     }
   }
 
-  bijhoudenZetten = 1;
   return besteScore;
 }//besteScore
 
 // Berekend de score voor de speler die aan de beurt is
 int TegelSpel::berekenScore(vector<vector<int>>* spelerRijen) {
-  // Bepaal het aantal volle rijen voor beide spelers
+  // Bepaal het aantal volle rijen voor `huidige speler
   int volleRijenSpeler1 = 0;
   int volleRijenSpeler2 = 0;
 
@@ -559,8 +552,6 @@ pair<int,char> TegelSpel::bepaalGoedeZet(int nrSimulaties) {
   return goedeZet;
 }//bepaalGoedeZet
 
-// bruh
-
 // Vergelijkt spelers die "goede" (= op basis van bepaalGoedeZet) en "beste" (= op basis van besteScore) zetten doen en retourneert de score van de huidige speler, ofwel "goede" speler
 int TegelSpel::bepaalGoedeScore() {
   TegelSpel kopie = *this;
@@ -583,34 +574,42 @@ int TegelSpel::bepaalGoedeScore() {
 
 // Loopt door naar eind op basis van zetten gemaakt door bepaalGoedeZet 
 // en meet vervolgens achteruit de berekeningstijd van besteScore;
-void TegelSpel::doeExperiment() { // BROKEN
+void TegelSpel::doeExperiment() {
   TegelSpel kopie = *this;
   int aantalZetten = 0;
   long long aantalStanden = 0;
 
-  // Play the game to the end
+  // Speel het spel uit tot het einde
   while (!kopie.eindstand()) {
     pair<int,char> zet = kopie.bepaalGoedeZet(NrSimulaties);
     kopie.doeZet(zet.first, zet.second);
     aantalZetten++;
   } 
-
+  
   pair<int,char> besteZet;
-
-  // Undo each move and measure the time it takes for besteScore to run
-  while (!kopie.spelGeschiedenis.empty()) {
+  // Ga steeds een zet terug en kijk hoelang het duurt voor
+  // besteScore om huidige positie te berekenen
+  while (aantalZetten >= 0) {
+    aantalStanden = 0; 
+    performance = 1;
     clock_t start = clock();
     kopie.besteScore(besteZet, aantalStanden);
     clock_t eind = clock();
+    performance = 0;
     double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
 
-    std::cout << "De zet met behulp van besteScore duurde " << duration << "ms om te berekenen\n";
-    if (aantalZetten > 1) {
+    std::cout << "De zet met behulp van besteScore duurde " << duration << "s om te berekenen over " << aantalStanden << " aantal standen \n";
+    if (aantalZetten > 0) {
       std::cout << "gegeven dat het " << aantalZetten << " zetten vanaf de startpositie berekend is. \n";
     } else {
       std::cout << "gegeven dat het vanaf de startpositie berekend is. \n";
+      kopie.drukAf();
     }
     aantalZetten--;
     kopie.unDoeZet();
   }
-}
+}//doeExperiment
+
+void TegelSpel::changePerformance() {
+  performance = (performance == 0) ? 1 : 0;
+}//changePerformance

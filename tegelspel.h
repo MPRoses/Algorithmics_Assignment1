@@ -9,7 +9,7 @@
 #include "constantes.h"
 using namespace std;
 
-// stack voor bijhouden van zetten 
+// stack voor bijhouden van spelState na een zet 
 struct spelState {
   string huidigePot;
   vector<vector<int>> speler1;
@@ -66,6 +66,10 @@ class TegelSpel {
     // en meet vervolgens achteruit de berekeningstijd van besteScore;
     void doeExperiment ();
 
+    // Performance, als 1 dan wordt de stack van de zetten niet bijgehouden
+    // Is in public zodat het aangeroepen kan worden in hoofd.cc
+    void changePerformance();
+
   private:
     // hulpfuncties voor leesInSpel
     bool leesPot(std::ifstream& fin);
@@ -83,7 +87,7 @@ class TegelSpel {
     // voldoet gegeven zet aan de zeteisen?
     bool zetEisen(int schaal, char kleur, int aantal);
     // kijkt of er voor meegegeven waarden een valide zet is
-    bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen);
+    bool valideZetten(int schaal, char kleur, int aantal, std::vector<std::vector<int>>* spelerRijen); 
 
     // Telt aantal volle rijen en berekend score
     int berekenScore(vector<vector<int>>* spelerRijen);
@@ -97,8 +101,8 @@ class TegelSpel {
     // welke speler is aan zet
     int huidigeBeurt;
     int actieveKleur = 0;
-    // bijhouden zetten
-    int bijhoudenZetten = 1;
+
+    int performance = 0;
 
     // houdt mogelijke rijen van zetten bij
     int mogelijkeZetten[20];
@@ -111,7 +115,7 @@ class TegelSpel {
 
     // stack voor bijhouden zetten
     stack<spelState> spelGeschiedenis;
-
+    
 };
 
 #endif

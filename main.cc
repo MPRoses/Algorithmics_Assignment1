@@ -53,13 +53,15 @@ int keuzeUitMenu ()
 // Roep s1->besteScore aan, meet de benodigde tijd, en zet de relevante
 // data op het scherm.
 void roepBesteScoreAan (TegelSpel *s1) { 
+  TegelSpel temp;
   pair<int,char> besteZet;
+  s1->changePerformance();
   long long aantalStanden = 0;  // aantal bekeken standen bij aanroep besteScore
 
   clock_t start = clock();
   int score = s1 -> besteScore(besteZet, aantalStanden);
   clock_t eind = clock();
-
+  s1->changePerformance();
   double duration = static_cast<double>(eind - start) / CLOCKS_PER_SEC;
 
   cout << endl;
