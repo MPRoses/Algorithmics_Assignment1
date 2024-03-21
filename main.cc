@@ -16,7 +16,7 @@
 //     steeds een beste zet doet
 //   - een experiment kan doen met de tijd van besteScore
 //
-// Namen studenten, datum
+//   Jens van der Sloot \\ S4018494 & Arthur van der Sterren \\ S4097769
 
 #include <iostream>
 #include <ctime>  // voor clock() en clock_t
